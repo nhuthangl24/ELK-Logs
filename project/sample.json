@@ -1,0 +1,28 @@
+[
+  {
+    "src_ip": "192.168.20.15",
+    "dst_ip": "10.0.0.12",
+    "src_port": 51482,
+    "dst_port": 443,
+    "protocol": "TCP",
+    "bytes": 1640,
+    "packets": 15,
+    "duration": 0.74,
+    "http_method": "GET",
+    "uri": "/api/v1/profile",
+    "label": 0
+  },
+  {
+    "src_ip": "203.0.113.77",
+    "dst_ip": "10.0.0.20",
+    "src_port": 49821,
+    "dst_port": 80,
+    "protocol": "TCP",
+    "bytes": 920,
+    "packets": 8,
+    "duration": 0.11,
+    "http_method": "GET",
+    "uri": "/login?username=admin' OR '1'='1' --",
+    "label": 1
+  }
+]

@@ -1,0 +1,50 @@
+{
+  "artifacts_dir": "artifacts",
+  "data_search_roots": [
+    "..",
+    "."
+  ],
+  "loader": {
+    "csv_chunksize": 250000,
+    "modsec_batch_size": 50000,
+    "cic_encodings": [
+      "utf-8",
+      "latin1",
+      "cp1252"
+    ]
+  },
+  "split": {
+    "test_size": 0.15,
+    "validation_size": 0.15
+  },
+  "model_selection": {
+    "metric": "f1",
+    "max_selection_rows": 250000
+  },
+  "feature_builder": {
+    "hash_bucket_size": 4096
+  },
+  "xgboost": {
+    "n_estimators": 400,
+    "max_depth": 10,
+    "learning_rate": 0.03,
+    "subsample": 0.8,
+    "colsample_bytree": 0.8,
+    "n_jobs": -1,
+    "random_state": 42,
+    "tree_method": "hist",
+    "eval_metric": "logloss",
+    "objective": "binary:logistic"
+  },
+  "random_forest": {
+    "n_estimators": 300,
+    "max_depth": 18,
+    "min_samples_leaf": 2,
+    "n_jobs": -1,
+    "random_state": 42,
+    "class_weight": "balanced_subsample"
+  },
+  "runtime": {
+    "random_state": 42
+  }
+}

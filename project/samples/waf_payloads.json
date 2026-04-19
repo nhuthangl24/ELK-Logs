@@ -1,0 +1,7 @@
+[
+  "/healthz",
+  "/static/app.css",
+  "/login?username=admin' OR '1'='1' --",
+  "/search?q=%3Cscript%3Ealert(document.cookie)%3C/script%3E",
+  "id=10%20UNION%20SELECT%201,2,3--"
+]

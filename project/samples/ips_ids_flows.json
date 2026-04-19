@@ -1,0 +1,54 @@
+[
+  {
+    "src_ip": "192.168.10.24",
+    "dst_ip": "172.16.1.20",
+    "src_port": 51544,
+    "dst_port": 443,
+    "protocol": "TCP",
+    "bytes": 1824,
+    "packets": 14,
+    "duration": 0.94,
+    "http_method": "GET",
+    "uri": "/api/v1/profile",
+    "label": 0
+  },
+  {
+    "src_ip": "10.0.8.33",
+    "dst_ip": "10.0.8.10",
+    "src_port": 56123,
+    "dst_port": 445,
+    "protocol": "TCP",
+    "bytes": 1450,
+    "packets": 11,
+    "duration": 0.41,
+    "http_method": "",
+    "uri": "",
+    "label": 0
+  },
+  {
+    "src_ip": "192.168.10.15",
+    "dst_ip": "8.8.8.8",
+    "src_port": 53011,
+    "dst_port": 53,
+    "protocol": "UDP",
+    "bytes": 210,
+    "packets": 2,
+    "duration": 0.03,
+    "http_method": "",
+    "uri": "",
+    "label": 0
+  },
+  {
+    "src_ip": "203.0.113.24",
+    "dst_ip": "10.10.0.15",
+    "src_port": 40122,
+    "dst_port": 22,
+    "protocol": "TCP",
+    "bytes": 468,
+    "packets": 5,
+    "duration": 0.08,
+    "http_method": "",
+    "uri": "",
+    "label": 1
+  }
+]

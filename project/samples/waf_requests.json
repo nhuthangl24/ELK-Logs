@@ -1,0 +1,67 @@
+[
+  {
+    "src_ip": "192.168.20.15",
+    "dst_ip": "10.0.0.12",
+    "src_port": 51482,
+    "dst_port": 443,
+    "protocol": "TCP",
+    "bytes": 1640,
+    "packets": 15,
+    "duration": 0.74,
+    "http_method": "GET",
+    "uri": "/api/v1/profile",
+    "label": 0
+  },
+  {
+    "src_ip": "10.1.2.33",
+    "dst_ip": "10.0.0.25",
+    "src_port": 56340,
+    "dst_port": 443,
+    "protocol": "TCP",
+    "bytes": 1840,
+    "packets": 16,
+    "duration": 0.56,
+    "http_method": "POST",
+    "uri": "/checkout",
+    "label": 0
+  },
+  {
+    "src_ip": "203.0.113.77",
+    "dst_ip": "10.0.0.20",
+    "src_port": 49821,
+    "dst_port": 80,
+    "protocol": "TCP",
+    "bytes": 920,
+    "packets": 8,
+    "duration": 0.11,
+    "http_method": "GET",
+    "uri": "/login?username=admin' OR '1'='1' --",
+    "label": 1
+  },
+  {
+    "src_ip": "198.51.100.44",
+    "dst_ip": "10.0.0.20",
+    "src_port": 53001,
+    "dst_port": 80,
+    "protocol": "TCP",
+    "bytes": 1015,
+    "packets": 9,
+    "duration": 0.13,
+    "http_method": "GET",
+    "uri": "/search?q=%3Cscript%3Ealert(document.cookie)%3C/script%3E",
+    "label": 1
+  },
+  {
+    "src_ip": "45.67.201.8",
+    "dst_ip": "10.0.0.30",
+    "src_port": 58213,
+    "dst_port": 443,
+    "protocol": "TCP",
+    "bytes": 1160,
+    "packets": 10,
+    "duration": 0.09,
+    "http_method": "POST",
+    "uri": "/api/users?name=admin%27%20union%20select%201,2,3--",
+    "label": 1
+  }
+]
