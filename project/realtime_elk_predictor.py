@@ -47,7 +47,6 @@ SOURCES: dict[str, dict[str, Any]] = {
         "query": {
             "size": BATCH_SIZE,
             "_source": True,
-            "sort": [{"@timestamp": "asc"}, {"_id": "asc"}],
             "query": {"match_all": {}},
         },
     },
@@ -56,7 +55,6 @@ SOURCES: dict[str, dict[str, Any]] = {
         "query": {
             "size": BATCH_SIZE,
             "_source": True,
-            "sort": [{"@timestamp": "asc"}, {"_id": "asc"}],
             "query": {
                 "bool": {
                     "must": [
@@ -68,6 +66,15 @@ SOURCES: dict[str, dict[str, Any]] = {
         },
     },
 }
+
+TIMESTAMP_SORT = [
+    {
+        "@timestamp": {
+            "order": "asc",
+            "format": "strict_date_optional_time_nanos",
+        }
+    }
+]
 
 
 def flatten_dict(data: dict[str, Any], parent_key: str = "", sep: str = ".") -> dict[str, Any]:
@@ -362,27 +369,84 @@ def send_telegram_alerts(records: list[dict[str, Any]]) -> None:
             print(f"[!] telegram error: {exc}")
 
 
-def fetch_new_hits(es: Elasticsearch, index: str, query: dict[str, Any], last_sort: list[Any] | None) -> tuple[list[dict[str, Any]], list[Any] | None]:
+def build_timestamp_query(base_query: dict[str, Any], last_timestamp: str | None) -> dict[str, Any]:
+    if not last_timestamp:
+        return base_query
+
+    range_clause = {"range": {"@timestamp": {"gte": last_timestamp}}}
+    if not base_query:
+        return {"bool": {"filter": [range_clause]}}
+
+    if "bool" in base_query:
+        merged = dict(base_query)
+        bool_query = dict(merged["bool"])
+        filters = list(bool_query.get("filter", []))
+        filters.append(range_clause)
+        bool_query["filter"] = filters
+        merged["bool"] = bool_query
+        return merged
+
+    return {"bool": {"must": [base_query], "filter": [range_clause]}}
+
+
+def deduplicate_hits(hits: list[dict[str, Any]], cursor: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    last_timestamp = cursor.get("last_timestamp")
+    seen_ids = set(cursor.get("seen_ids", []))
+    accepted_hits: list[dict[str, Any]] = []
+
+    newest_timestamp = last_timestamp
+    newest_seen_ids = set(seen_ids)
+
+    for hit in hits:
+        source = hit.get("_source", {})
+        timestamp = str(source.get("@timestamp", "") or "")
+        hit_key = f'{hit.get("_index", "")}:{hit.get("_id", "")}'
+
+        if last_timestamp and timestamp == last_timestamp and hit_key in seen_ids:
+            continue
+
+        accepted_hits.append(hit)
+
+        if not newest_timestamp or timestamp > newest_timestamp:
+            newest_timestamp = timestamp
+            newest_seen_ids = {hit_key}
+        elif timestamp == newest_timestamp:
+            newest_seen_ids.add(hit_key)
+
+    new_cursor = {
+        "last_timestamp": newest_timestamp,
+        "seen_ids": sorted(newest_seen_ids),
+    }
+    return accepted_hits, new_cursor
+
+
+def fetch_new_hits(es: Elasticsearch, index: str, query: dict[str, Any], cursor: dict[str, Any]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     body = dict(query)
-    if last_sort is not None:
-        body["search_after"] = last_sort
+    body["sort"] = TIMESTAMP_SORT
+    body["track_total_hits"] = False
+    body["query"] = build_timestamp_query(body.get("query", {}), cursor.get("last_timestamp"))
 
     response = es.search(index=index, body=body)
     hits = response.get("hits", {}).get("hits", [])
     if not hits:
-        return [], last_sort
-    return hits, hits[-1]["sort"]
+        return [], cursor
+    return deduplicate_hits(hits, cursor)
 
 
-def fetch_latest_sort(es: Elasticsearch, index: str, query: dict[str, Any]) -> list[Any] | None:
+def fetch_latest_cursor(es: Elasticsearch, index: str, query: dict[str, Any]) -> dict[str, Any]:
     body = dict(query)
     body["size"] = 1
-    body["sort"] = [{"@timestamp": "desc"}, {"_id": "desc"}]
+    body["sort"] = [{"@timestamp": {"order": "desc", "format": "strict_date_optional_time_nanos"}}]
+    body["track_total_hits"] = False
     response = es.search(index=index, body=body)
     hits = response.get("hits", {}).get("hits", [])
     if not hits:
-        return None
-    return hits[0].get("sort")
+        return {"last_timestamp": None, "seen_ids": []}
+
+    hit = hits[0]
+    timestamp = str(hit.get("_source", {}).get("@timestamp", "") or "")
+    hit_key = f'{hit.get("_index", "")}:{hit.get("_id", "")}'
+    return {"last_timestamp": timestamp, "seen_ids": [hit_key]}
 
 
 def index_predictions(es: Elasticsearch, records: list[dict[str, Any]]) -> None:
@@ -475,11 +539,13 @@ def main() -> None:
         "ids_to_elk": map_ids_to_elk,
     }
 
-    last_sort_map: dict[str, list[Any] | None] = {source_name: None for source_name in SOURCES}
+    cursor_map: dict[str, dict[str, Any]] = {
+        source_name: {"last_timestamp": None, "seen_ids": []} for source_name in SOURCES
+    }
     if START_FROM_LATEST:
         for source_name, config in SOURCES.items():
             try:
-                last_sort_map[source_name] = fetch_latest_sort(es, config["index"], config["query"])
+                cursor_map[source_name] = fetch_latest_cursor(es, config["index"], config["query"])
             except Exception as exc:
                 print(f"[!] bootstrap {source_name} error: {exc}")
 
@@ -494,13 +560,14 @@ def main() -> None:
     while True:
         for source_name, config in SOURCES.items():
             try:
-                hits, new_last_sort = fetch_new_hits(
+                hits, new_cursor = fetch_new_hits(
                     es=es,
                     index=config["index"],
                     query=config["query"],
-                    last_sort=last_sort_map[source_name],
+                    cursor=cursor_map[source_name],
                 )
                 if not hits:
+                    cursor_map[source_name] = new_cursor
                     continue
 
                 records = score_hits(
@@ -519,7 +586,7 @@ def main() -> None:
                 for record in records:
                     print(json.dumps(record, ensure_ascii=False))
 
-                last_sort_map[source_name] = new_last_sort
+                cursor_map[source_name] = new_cursor
             except Exception as exc:
                 print(f"[!] {source_name} error: {exc}")
 
