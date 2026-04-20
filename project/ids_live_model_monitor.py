@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import time
 from html import escape
 from pathlib import Path
@@ -39,6 +40,7 @@ TELEGRAM_ENABLED = os.getenv("TELEGRAM_ENABLED", "true").lower() == "true" and b
 TELEGRAM_MIN_PROBABILITY = float(os.getenv("TELEGRAM_MIN_PROBABILITY", "0.50"))
 TELEGRAM_TIMEOUT_SECONDS = float(os.getenv("TELEGRAM_TIMEOUT_SECONDS", "10"))
 TELEGRAM_MESSAGE_PREFIX = os.getenv("TELEGRAM_MESSAGE_PREFIX", "IDS Alert").strip()
+TELEGRAM_VERIFY_CERTS = os.getenv("TELEGRAM_VERIFY_CERTS", "false").lower() == "true"
 
 TIMESTAMP_SORT = [
     {
@@ -362,7 +364,8 @@ def send_telegram_message(message: str) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urlopen(request, timeout=TELEGRAM_TIMEOUT_SECONDS) as response:
+    ssl_context = None if TELEGRAM_VERIFY_CERTS else ssl._create_unverified_context()
+    with urlopen(request, timeout=TELEGRAM_TIMEOUT_SECONDS, context=ssl_context) as response:
         response.read()
 
 
@@ -455,6 +458,7 @@ def main() -> None:
     print(f"[+] Alert mode: {ALERT_MODE}")
     print(f"[+] Save local NDJSON: {SAVE_LOCAL_OUTPUT}")
     print(f"[+] Telegram enabled: {TELEGRAM_ENABLED}")
+    print(f"[+] Telegram verify certs: {TELEGRAM_VERIFY_CERTS}")
 
     while True:
         try:

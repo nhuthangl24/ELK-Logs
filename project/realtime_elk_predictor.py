@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import ssl
 import time
 from html import escape
 from pathlib import Path
@@ -40,6 +41,7 @@ TELEGRAM_MIN_PROBABILITY = float(os.getenv("TELEGRAM_MIN_PROBABILITY", "0.80"))
 TELEGRAM_TIMEOUT_SECONDS = float(os.getenv("TELEGRAM_TIMEOUT_SECONDS", "10"))
 TELEGRAM_SEND_ONLY_ALERTS = os.getenv("TELEGRAM_SEND_ONLY_ALERTS", "true").lower() == "true"
 TELEGRAM_MESSAGE_PREFIX = os.getenv("TELEGRAM_MESSAGE_PREFIX", "Cyber Alert").strip()
+TELEGRAM_VERIFY_CERTS = os.getenv("TELEGRAM_VERIFY_CERTS", "false").lower() == "true"
 
 SOURCES: dict[str, dict[str, Any]] = {
     "pfelkfw": {
@@ -350,7 +352,8 @@ def send_telegram_message(message: str) -> None:
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    with urlopen(request, timeout=TELEGRAM_TIMEOUT_SECONDS) as response:
+    ssl_context = None if TELEGRAM_VERIFY_CERTS else ssl._create_unverified_context()
+    with urlopen(request, timeout=TELEGRAM_TIMEOUT_SECONDS, context=ssl_context) as response:
         response.read()
 
 
@@ -556,6 +559,7 @@ def main() -> None:
     print(f"[+] Save local NDJSON: {SAVE_LOCAL_OUTPUT}")
     print(f"[+] Poll interval: {POLL_INTERVAL_SECONDS} seconds")
     print(f"[+] Telegram enabled: {TELEGRAM_ENABLED}")
+    print(f"[+] Telegram verify certs: {TELEGRAM_VERIFY_CERTS}")
 
     while True:
         for source_name, config in SOURCES.items():
