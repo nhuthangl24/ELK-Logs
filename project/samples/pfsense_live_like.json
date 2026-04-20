@@ -1,0 +1,50 @@
+[
+  {
+    "Time": "2026-04-20 07:00:19",
+    "Log subtype": "Denied",
+    "Firewall rule name": "LAN-Segment-Block",
+    "Rule type": 1,
+    "Message": "",
+    "Src IP": "192.168.10.100",
+    "Dst IP": "192.168.20.30",
+    "Src port": 34696,
+    "Dst port": 22,
+    "protocol": "TCP"
+  },
+  {
+    "Time": "2026-04-20 07:00:20",
+    "Log subtype": "Denied",
+    "Firewall rule name": "LAN-Segment-Block",
+    "Rule type": 1,
+    "Message": "",
+    "Src IP": "192.168.10.100",
+    "Dst IP": "192.168.20.30",
+    "Src port": 58427,
+    "Dst port": 1,
+    "protocol": "TCP"
+  },
+  {
+    "Time": "2026-04-20 07:02:11",
+    "Log subtype": "Denied",
+    "Firewall rule name": "WAN-to-Server-SSH-Block",
+    "Rule type": 1,
+    "Message": "",
+    "Src IP": "203.0.113.77",
+    "Dst IP": "192.168.20.30",
+    "Src port": 40122,
+    "Dst port": 22,
+    "protocol": "TCP"
+  },
+  {
+    "Time": "2026-04-20 07:02:15",
+    "Log subtype": "Denied",
+    "Firewall rule name": "Bogon-Invalid",
+    "Rule type": 0,
+    "Message": "TCP Packets with invalid flag combination.",
+    "Src IP": "159.192.104.79",
+    "Dst IP": "192.168.20.30",
+    "Src port": 63228,
+    "Dst port": 1078,
+    "protocol": "TCP"
+  }
+]

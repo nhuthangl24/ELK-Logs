@@ -26,6 +26,13 @@ Tat ca file trong thu muc nay la mau "giong thuc te":
    Chay:
    & "..\.venv\Scripts\python.exe" main.py predict --input samples\pfsense_firewall.json
 
+5. pfsense_live_like.json
+   - index 0,1: log block noi bo giong mau ban vua gui, thuong se ra benign
+   - index 2: block SSH tu IP public vao server noi bo, de ra malicious hon
+   - index 3: bogon / invalid TCP flags, de ra malicious hon
+   Chay:
+   & "..\.venv\Scripts\python.exe" main.py predict --input samples\pfsense_live_like.json
+
 Doc ket qua:
    - prediction = 0  -> binh thuong
    - prediction = 1  -> dang nghi / tan cong
